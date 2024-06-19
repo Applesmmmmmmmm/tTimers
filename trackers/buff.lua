@@ -39,6 +39,8 @@ local rolls = T{ 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 
 local buffOverrides = T{
 };
 
+local partyManager = AshitaCore:GetMemoryManager():GetParty();
+
 --[[    
     timerData
     Data must contain the following members:
@@ -212,7 +214,13 @@ local function PlayerIdToName(id)
     local entity = AshitaCore:GetMemoryManager():GetEntity();
     for i = 0x400,0x8FF do
         if (entity:GetServerId(i) == id) then
-            return entity:GetName(i);
+            local name = entity:GetName(i)
+            if name == partyManager:GetMemberName(0) then
+                return "Me";
+            else
+                return name;
+            end
+            
         end
     end
     return 'Unknown';
