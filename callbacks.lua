@@ -40,6 +40,26 @@ else
     Error('Failed to create sprite.');
 end
 
+local function NormalizeUserTime(userTime)
+    if type(userTime) == 'string' then
+        local multiplier = 1;
+        local trail = string.lower(string.sub(userTime, -1, -1));
+        if trail == 's' then
+            userTime = userTime:sub(1, -2);
+        elseif (trail == 'm') then
+            multiplier = 60;
+            userTime = userTime:sub(1, -2);
+        elseif (trail == 'h') then
+            multiplier = 3600;
+            userTime = userTime:sub(1, -2);
+        end
+        local time = tonumber(userTime);
+        if type(time) == 'number' then
+            return time * multiplier;
+        end
+    end
+end
+
 ashita.events.register('d3d_present', 'd3d_present_cb', function ()
     config:Render();
     if (sprite == nil) then
@@ -101,23 +121,8 @@ ashita.events.register('command', 'command_cb', function (e)
         if (args[2] == 'custom') then
             if (#args >= 4) then
                 local duration;
-                if type(args[4]) == 'string' then
-                    local multiplier = 1;
-                    local trail = string.lower(string.sub(args[4], -1, -1));
-                    if trail == 's' then
-                        args[4] = args[4]:sub(1, -2);
-                    elseif (trail == 'm') then
-                        multiplier = 60;
-                        args[4] = args[4]:sub(1, -2);
-                    elseif (trail == 'h') then
-                        multiplier = 3600;
-                        args[4] = args[4]:sub(1, -2);
-                    end
-                    local time = tonumber(args[4]);
-                    if type(time) == 'number' then
-                        duration = time * multiplier;
-                    end
-                end
+                local totalDuration;
+                duration = NormalizeUserTime(args[4])
                 if (type(duration) == 'number') then
                     local newCustomTimer = {
                         Creation = os.clock(),
@@ -128,6 +133,9 @@ ashita.events.register('command', 'command_cb', function (e)
                     };
                     if (#args > 4) then
                         newCustomTimer.Tooltip = args[5];
+                    end
+                    if (#args > 5) then 
+                        newCustomTimer.TotalDuration = NormalizeUserTime(args[6])
                     end
                     customTracker:AddTimer(newCustomTimer);
                 end
@@ -140,6 +148,6 @@ ashita.events.register('command', 'command_cb', function (e)
         print(chat.header('tTimers') .. chat.color1(2, '/tt') .. chat.message(' - Opens configuration menu.'));
         print(chat.header('tTimers') .. chat.color1(2, '/tt reposition') .. chat.message(' - Starts reposition mode, which shows debug timers to fill all panels and provides draggable handles to move them.'));
         print(chat.header('tTimers') .. chat.color1(2, '/tt lock') .. chat.message(' - Ends repositioning mode and saves positions for the current character.'));
-        print(chat.header('tTimers') .. chat.color1(2, '/tt custom [label] [duration]') .. chat.message(' - Adds a custom timer.  Duration can be specified in number of seconds or using s,m, or h suffixes with or without decimal places(30m, 1h, 10.5m, etc).'));
+        print(chat.header('tTimers') .. chat.color1(2, '/tt custom [label] [duration] [tooltip*] [totalDuration*]') .. chat.message(' - Adds a custom timer.  Duration can be specified in number of seconds or using s,m, or h suffixes with or without decimal places(30m, 1h, 10.5m, etc). (*)Fields are optional, but require previous optional fields to be used.'));
     end
 end);
