@@ -62,7 +62,7 @@ end
 
 ashita.events.register('d3d_present', 'd3d_present_cb', function ()
     config:Render();
-    if (sprite == nil) then
+    if (sprite == nil) or ((gSettings.HideWithPrimitives == true) and (AshitaCore:GetPrimitiveManager():GetVisible() == false)) then
         return;
     end
 
@@ -123,6 +123,7 @@ ashita.events.register('command', 'command_cb', function (e)
                 local duration;
                 local totalDuration;
                 duration = NormalizeUserTime(args[4])
+
                 if (type(duration) == 'number') then
                     local newCustomTimer = {
                         Creation = os.clock(),
@@ -132,13 +133,28 @@ ashita.events.register('command', 'command_cb', function (e)
                         TotalDuration = duration;
                     };
                     if (#args > 4) then
-                        newCustomTimer.Tooltip = args[5];
+                        if (args[5] == 'repeat') then
+                            newCustomTimer.Repeating = true;
+                            if (#args > 5) then
+                                newCustomTimer.Tooltip = args[6];
+                            end
+                        else
+                            newCustomTimer.Tooltip = args[5];
+                        end
                     end
                     if (#args > 5) then 
                         newCustomTimer.TotalDuration = NormalizeUserTime(args[6])
                     end
                     customTracker:AddTimer(newCustomTimer);
                 end
+            end
+            e.blocked = true;
+            return;
+        end
+
+        if (args[2] == 'stop') then
+            if (#args > 2) then
+                customTracker:DeleteTimer(args[3]);
             end
             e.blocked = true;
             return;
